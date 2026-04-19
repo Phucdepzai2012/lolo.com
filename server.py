@@ -183,30 +183,52 @@ def on_disconnect():
         if not rooms[rid]['players']:
             del rooms[rid]
 
-@socketio.on('find_match')
-def on_find_match():
+@socketio.on('create_room')
+def on_create_room(data):
     from flask import request
-    sid = request.sid
-    # Tìm phòng đang chờ
-    open_room = next(
-        (rid for rid, r in rooms.items()
-         if len(r['players']) == 1 and not r['started']), None)
+    sid      = request.sid
+    room_id  = (data.get('room_id') or '').strip().upper()
 
-    if open_room is None:
-        open_room = f'room_{random.randint(100000, 999999)}'
-        rooms[open_room] = {
-            'players': [], 'chars': {}, 'started': False,
-            'state': None, 'round_start': None
-        }
+    # Sinh ID ngẫu nhiên nếu để trống
+    if not room_id:
+        room_id = ''.join(random.choices('ABCDEFGHJKLMNPQRSTUVWXYZ23456789', k=6))
 
-    join_room(open_room)
-    rooms[open_room]['players'].append(sid)
-    player_rooms[sid] = open_room
-    pnum = rooms[open_room]['players'].index(sid) + 1
+    # ID đã tồn tại và đang dùng → báo lỗi
+    if room_id in rooms and rooms[room_id]['players']:
+        emit('room_error', {'msg': f'Phòng "{room_id}" đã có người. Hãy chọn ID khác!'})
+        return
 
-    emit('matched', {'room_id': open_room, 'player_num': pnum})
-    if len(rooms[open_room]['players']) == 2:
-        socketio.emit('opponent_joined', {}, room=open_room)
+    rooms[room_id] = {'players': [], 'chars': {}, 'started': False,
+                      'state': None, 'round_start': None}
+
+    join_room(room_id)
+    rooms[room_id]['players'].append(sid)
+    player_rooms[sid] = room_id
+    emit('room_created', {'room_id': room_id, 'player_num': 1})
+
+
+@socketio.on('join_room_by_id')
+def on_join_room(data):
+    from flask import request
+    sid     = request.sid
+    room_id = (data.get('room_id') or '').strip().upper()
+
+    if room_id not in rooms:
+        emit('room_error', {'msg': f'Phòng "{room_id}" không tồn tại!'})
+        return
+    room = rooms[room_id]
+    if room['started']:
+        emit('room_error', {'msg': 'Trận đấu đã bắt đầu rồi!'})
+        return
+    if len(room['players']) >= 2:
+        emit('room_error', {'msg': 'Phòng đã đủ 2 người!'})
+        return
+
+    join_room(room_id)
+    room['players'].append(sid)
+    player_rooms[sid] = room_id
+    emit('room_joined', {'room_id': room_id, 'player_num': 2})
+    socketio.emit('opponent_joined', {}, room=room_id)
 
 @socketio.on('select_char')
 def on_select_char(data):
