@@ -96,14 +96,43 @@ body::after {
 
 .conn-box {
   background:var(--panel); border:3px solid var(--border);
-  padding:28px; display:flex; flex-direction:column; gap:14px; min-width:360px;
+  padding:28px; display:flex; flex-direction:column; gap:14px; min-width:380px;
 }
 .field-label { font-size:6px; color:var(--dim); margin-bottom:5px; }
-#connMsg { font-size:6px; color:var(--dim); text-align:center; min-height:12px; }
+#connMsg { font-size:6px; text-align:center; min-height:12px; color:var(--dim); }
+.divider {
+  display:flex; align-items:center; gap:10px; color:var(--dim); font-size:6px;
+}
+.divider::before,.divider::after { content:''; flex:1; height:1px; background:var(--border); }
+
+/* ═══ ROOM SCREEN ════════════════════════════════════════ */
+#sRoom {
+  background: radial-gradient(ellipse at 50% 30%, #1a0626 0%, #060610 70%);
+  gap:14px;
+}
+.room-panels { display:flex; gap:18px; align-items:stretch; }
+.room-panel {
+  background:var(--panel); border:3px solid var(--border);
+  padding:24px 20px; display:flex; flex-direction:column; gap:12px;
+  min-width:210px; align-items:center; text-align:center;
+}
+.room-panel-title { font-size:8px; color:var(--gold); }
+.room-panel p { font-size:5.5px; color:var(--dim); line-height:2; }
+.room-sep { width:2px; background:var(--border); border-radius:2px; }
+.room-id-display {
+  background:#08081a; border:3px solid var(--gold); padding:14px 18px;
+  font-size:22px; color:var(--gold); letter-spacing:6px;
+  text-shadow:0 0 16px var(--gold); font-family:var(--font);
+  min-width:160px; text-align:center; cursor:pointer; position:relative;
+  transition: box-shadow .2s;
+}
+.room-id-display:hover { box-shadow:0 0 20px #ffd70044; }
+.copy-hint { font-size:5px; color:var(--dim); }
+#roomMsg { font-size:6px; text-align:center; min-height:12px; }
+.inp-upper { text-transform:uppercase; letter-spacing:4px; }
 .how-to {
   font-size:5.5px; color:var(--dim); text-align:center;
-  line-height:2.5; max-width:400px;
-  border:1px solid #1a1a36; padding:12px;
+  line-height:2.5; max-width:440px; border:1px solid #1a1a36; padding:12px;
 }
 .how-to span { color:var(--gold); }
 
@@ -323,65 +352,106 @@ body::after {
     <div class="logo-title">⚔ PIXEL BATTLE</div>
     <div class="logo-sub">&gt;&gt; LAN MULTIPLAYER FIGHTER &lt;&lt;</div>
   </div>
-
   <div class="conn-box">
     <div>
-      <div class="field-label">SERVER IP (Host's LAN IP):</div>
-      <input id="inpIp" class="px-inp" type="text" value="localhost" placeholder="192.168.x.x" spellcheck="false">
+      <div class="field-label">SERVER IP (IP cua may host):</div>
+      <input id="inpIp" class="px-inp" type="text" value="localhost"
+             placeholder="192.168.x.x" spellcheck="false"
+             onkeydown="if(event.key==='Enter')connectServer()">
     </div>
-    <button class="btn btn-red" onclick="connectServer()">▶ KẾT NỐI SERVER</button>
+    <button class="btn btn-red" onclick="connectServer()">&#9654; KET NOI SERVER</button>
     <div id="connMsg"></div>
   </div>
-
   <div class="how-to">
-    📋 HƯỚNG DẪN KẾT NỐI<br><br>
-    1. Host chạy: <span>python server.py</span><br>
-    2. Host xem IP LAN hiện ra (vd: <span>192.168.1.5</span>)<br>
-    3. Player 2 nhập IP đó vào ô trên<br>
-    4. Cả 2 bấm Kết Nối → Chọn nhân vật → CHIẾN!<br><br>
-    🎮 Phím tắt: <span>[A]</span> tấn công · <span>[S][D][F]</span> skill 1-2-3
+    &#128203; HUONG DAN<br><br>
+    1. Host chay: <span>python server.py</span><br>
+    2. Xem IP LAN hien ra (vd: <span>192.168.1.5</span>)<br>
+    3. Ca 2 nhap IP do &#8594; Ket Noi<br>
+    4. Host bam <span>Tao Phong</span>, gui ma cho ban<br>
+    5. Ban nhap ma &#8594; <span>Vao Phong</span> &#8594; CHIEN!<br><br>
+    &#127918; Phim: <span>[A]</span> tan cong &middot; <span>[S][D][F]</span> skill 1-2-3
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════
-     LOBBY SCREEN
-════════════════════════════════════════════════════════ -->
+<!-- ROOM SCREEN -->
+<div id="sRoom" class="screen">
+  <div style="display:flex;flex-direction:column;gap:6px;align-items:center">
+    <div class="logo-title" style="font-size:18px">&#9876; PIXEL BATTLE</div>
+    <div style="font-size:6px;color:var(--green)" id="connectedLabel">&#10003; Da ket noi server</div>
+  </div>
+  <div class="room-panels">
+    <div class="room-panel">
+      <div class="room-panel-title">&#127968; TAO PHONG</div>
+      <p>Tao phong moi roi<br>gui ma cho ban be</p>
+      <div style="width:100%">
+        <div class="field-label">MA TUY CHON (de trong = tu tao):</div>
+        <input id="inpCreateId" class="px-inp inp-upper" type="text" maxlength="6"
+               placeholder="ABC123" spellcheck="false"
+               style="text-align:center;letter-spacing:4px"
+               onkeydown="if(event.key==='Enter')createRoom()">
+      </div>
+      <button class="btn btn-red" onclick="createRoom()" style="width:100%">+ TAO PHONG MOI</button>
+      <div id="createdRoomWrap" style="display:none;flex-direction:column;gap:8px;align-items:center">
+        <div class="field-label">MA PHONG — GUI CHO BAN BE:</div>
+        <div class="room-id-display" id="createdRoomId" onclick="copyRoomId()" title="Click de copy"></div>
+        <div class="copy-hint">&#128433; Click de sao chep</div>
+        <div style="font-size:5px;color:var(--dim)">Dang cho doi thu...</div>
+        <div class="waiting-dots"><span>&#9679;</span><span>&#9679;</span><span>&#9679;</span></div>
+      </div>
+    </div>
+    <div class="room-sep"></div>
+    <div class="room-panel">
+      <div class="room-panel-title">&#128682; VAO PHONG</div>
+      <p>Nhap ma phong<br>ban be gui cho ban</p>
+      <div style="width:100%">
+        <div class="field-label">NHAP MA PHONG:</div>
+        <input id="inpJoinId" class="px-inp inp-upper" type="text" maxlength="6"
+               placeholder="ABC123" spellcheck="false"
+               style="text-align:center;letter-spacing:4px"
+               onkeydown="if(event.key==='Enter')joinRoom()">
+      </div>
+      <button class="btn btn-blue" onclick="joinRoom()" style="width:100%">&#9654; VAO PHONG</button>
+    </div>
+  </div>
+  <div id="roomMsg"></div>
+  <button class="btn btn-gray" style="font-size:7px" onclick="backToConnect()">&#8592; Doi IP Server</button>
+</div>
+
+<!-- LOBBY SCREEN -->
 <div id="sLobby" class="screen">
   <div class="lobby-box">
-    <div class="lobby-title">🏟 LOBBY</div>
+    <div class="lobby-title">&#127960; LOBBY</div>
     <div id="lobbyRoomId" style="font-size:6px;color:var(--dim)">Room: ...</div>
     <div class="player-slots">
       <div class="pslot" id="pslot1">
-        <div class="pslot-ico">⬜</div>
+        <div class="pslot-ico">&#9634;</div>
         <div style="font-size:6px;color:var(--p1)">PLAYER 1</div>
-        <div class="pslot-lbl" id="pslot1lbl">Đang chờ...</div>
+        <div class="pslot-lbl" id="pslot1lbl">Dang cho...</div>
       </div>
       <div class="vs-big">VS</div>
       <div class="pslot" id="pslot2">
-        <div class="pslot-ico">⬜</div>
+        <div class="pslot-ico">&#9634;</div>
         <div style="font-size:6px;color:var(--p2)">PLAYER 2</div>
-        <div class="pslot-lbl" id="pslot2lbl">Đang chờ...</div>
+        <div class="pslot-lbl" id="pslot2lbl">Dang cho...</div>
       </div>
     </div>
-    <div class="waiting-dots"><span>●</span><span>●</span><span>●</span></div>
-    <div id="lobbyInfo">Đang tìm đối thủ trên mạng LAN...</div>
+    <div class="waiting-dots"><span>&#9679;</span><span>&#9679;</span><span>&#9679;</span></div>
+    <div id="lobbyInfo">Dang cho doi thu vao phong...</div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════
-     CHARACTER SELECT SCREEN
-════════════════════════════════════════════════════════ -->
+<!-- CHARACTER SELECT SCREEN -->
 <div id="sCharSelect" class="screen">
-  <div class="cs-title">⚔ CHỌN NHÂN VẬT</div>
+  <div class="cs-title">&#9876; CHON NHAN VAT</div>
   <div class="cs-players">
-    <div class="cs-pname p1c" id="csP1lbl">P1: Đang chọn...</div>
+    <div class="cs-pname p1c" id="csP1lbl">P1: Dang chon...</div>
     <div style="font-size:8px;color:var(--gold)">VS</div>
-    <div class="cs-pname p2c" id="csP2lbl">P2: Đang chọn...</div>
+    <div class="cs-pname p2c" id="csP2lbl">P2: Dang chon...</div>
   </div>
   <div class="char-grid" id="charGrid"></div>
   <div class="play-btn-wrap">
-    <div class="cs-hint" id="csHint">Nhấp vào nhân vật để chọn. Trận đấu bắt đầu khi cả 2 chọn xong!</div>
-    <button id="playBtn" class="btn btn-gold">▶ SẴN SÀNG CHIẾN!</button>
+    <div class="cs-hint" id="csHint">Nhan vao nhan vat de chon. Tran dau bat dau khi ca 2 chon xong!</div>
+    <button id="playBtn" class="btn btn-gold">&#9654; SAN SANG CHIEN!</button>
   </div>
 </div>
 
@@ -1190,34 +1260,56 @@ function updateCooldownUI() {
 function connectServer() {
   const ip = document.getElementById('inpIp').value.trim();
   const url = ip.startsWith('http') ? ip : `http://${ip}:5000`;
-  setConnMsg('🔄 Đang kết nối...');
+  setConnMsg('Dang ket noi...');
 
   if (socket) { socket.disconnect(); socket=null; }
 
   socket = io(url, {transports:['websocket','polling'],timeout:8000});
 
-  socket.on('connect', ()=>{ setConnMsg('✅ Đã kết nối! Đang tìm trận...'); socket.emit('find_match'); });
-  socket.on('connect_error', ()=> setConnMsg('❌ Không kết nối được! Kiểm tra IP và server.'));
+  socket.on('connect', ()=>{
+    setConnMsg('Da ket noi! Chon phong...');
+    document.getElementById('connectedLabel').textContent='Connected: '+url;
+    showScreen('sRoom');
+  });
+  socket.on('connect_error', ()=> setConnMsg('Khong ket noi duoc! Kiem tra IP va server.'));
 
   socket.on('server_hello', (d)=>{
     serverChars = d.chars || {};
   });
 
-  socket.on('matched', (d)=>{
+  socket.on('room_created', (d)=>{
+    myNum  = d.player_num;
+    roomId = d.room_id;
+    document.getElementById('lobbyRoomId').textContent='Room: '+roomId;
+    // Show room ID in Room screen
+    document.getElementById('createdRoomId').textContent=roomId;
+    document.getElementById('createdRoomWrap').style.display='flex';
+    document.getElementById(`pslot${myNum}`).classList.add(`ready-p${myNum}`);
+    document.getElementById(`pslot${myNum}lbl`).textContent='Ban (P'+myNum+')';
+    setRoomMsg('');
+  });
+
+  socket.on('room_joined', (d)=>{
     myNum  = d.player_num;
     roomId = d.room_id;
     document.getElementById('lobbyRoomId').textContent='Room: '+roomId;
     document.getElementById(`pslot${myNum}`).classList.add(`ready-p${myNum}`);
-    document.getElementById(`pslot${myNum}lbl`).textContent='Bạn (P'+myNum+')';
+    document.getElementById(`pslot${myNum}lbl`).textContent='Ban (P'+myNum+')';
     showScreen('sLobby');
+    setRoomMsg('');
+  });
+
+  socket.on('room_error', (d)=>{
+    setRoomMsg('&#10060; '+d.msg, '#ff4444');
   });
 
   socket.on('opponent_joined', ()=>{
     const opp=3-myNum;
     document.getElementById(`pslot${opp}`).classList.add(`ready-p${opp}`);
-    document.getElementById(`pslot${opp}lbl`).textContent='Đối thủ';
-    document.getElementById('lobbyInfo').textContent='Tìm thấy đối thủ! Vào màn chọn nhân vật...';
-    setTimeout(()=>showScreen('sCharSelect'), 800);
+    document.getElementById(`pslot${opp}lbl`).textContent='Doi thu';
+    document.getElementById('lobbyInfo').textContent='Tim thay doi thu! Vao man chon nhan vat...';
+    showScreen('sLobby');
+    setTimeout(()=>showScreen('sCharSelect'), 900);
   });
 
   socket.on('char_picked', (d)=>{
@@ -1316,6 +1408,46 @@ function connectServer() {
   });
 }
 
+function createRoom() {
+  if (!socket) return;
+  const rid = document.getElementById('inpCreateId').value.trim().toUpperCase();
+  socket.emit('create_room', {room_id: rid});
+}
+
+function joinRoom() {
+  if (!socket) return;
+  const rid = document.getElementById('inpJoinId').value.trim().toUpperCase();
+  if (!rid) { setRoomMsg('Nhap ma phong truoc!', '#ffaa00'); return; }
+  socket.emit('join_room_by_id', {room_id: rid});
+}
+
+function copyRoomId() {
+  const rid = document.getElementById('createdRoomId').textContent;
+  if (!rid) return;
+  navigator.clipboard.writeText(rid).then(()=>{
+    const el = document.getElementById('createdRoomId');
+    const orig = el.textContent;
+    el.textContent = 'COPIED!';
+    el.style.color = '#22ff88';
+    setTimeout(()=>{ el.textContent=orig; el.style.color=''; }, 1200);
+  }).catch(()=>{});
+}
+
+function backToConnect() {
+  if (socket) { socket.disconnect(); socket=null; }
+  document.getElementById('createdRoomWrap').style.display='none';
+  document.getElementById('inpCreateId').value='';
+  document.getElementById('inpJoinId').value='';
+  setRoomMsg('');
+  showScreen('sConnect');
+}
+
+function setRoomMsg(msg, color='#ff4444') {
+  const el = document.getElementById('roomMsg');
+  el.textContent = msg;
+  el.style.color = color;
+}
+
 function showFightSplash() {
   // big FIGHT! text on canvas briefly
   addLog('⚔⚔⚔  FIGHT!  ⚔⚔⚔','#ffd700');
@@ -1382,11 +1514,7 @@ function buildCharGrid() {
     });
     card.appendChild(skDiv);
 
-    card.onclick=()=>{
-      if (!socket||!roundActive===false) {
-        socket.emit('select_char',{char:id});
-      }
-    };
+    card.onclick=()=>{ if (socket) socket.emit('select_char',{char:id}); };
     grid.appendChild(card);
   });
 }
@@ -1426,11 +1554,17 @@ function showGameOver(winner, byTime) {
 }
 
 function playAgain() {
-  showScreen('sLobby');
-  if (socket) socket.emit('find_match');
+  cleanup();
+  // Reset room screen state
+  document.getElementById('createdRoomWrap').style.display='none';
+  document.getElementById('inpCreateId').value='';
+  document.getElementById('inpJoinId').value='';
+  setRoomMsg('');
+  showScreen('sRoom');
 }
 function backToMenu() {
   cleanup();
+  if (socket) { socket.disconnect(); socket=null; }
   showScreen('sConnect');
 }
 function cleanup() {
